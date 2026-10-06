@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Directorios de agentes e IDEs de IA
+.agents/
+.claude/
+.cursor/
+.devin/
