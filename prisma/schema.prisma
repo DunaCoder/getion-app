@@ -1,0 +1,163 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Category {
+  categoryId String   @id @default(uuid())
+  name       String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  products   Product[]
+}
+
+model Store {
+  storeId   String    @id @default(uuid())
+  name      String
+  createdAt DateTime  @default(now())
+  products  Product[]
+  branches  Branch[]
+  users     User[]
+}
+
+model Branch {
+  branchId         String          @id @default(uuid())
+  storeId          String
+  store            Store           @relation(fields: [storeId], references: [storeId])
+  name             String
+  address          String?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  deletedAt        DateTime?
+  stocks           Stock[]
+  movements        Movement[]
+  productPrices    ProductPrice[]
+  orders           Order[]
+}
+
+model Product {
+  productId     String          @id @default(uuid())
+  name          String
+  description   String
+  price         Decimal         @db.Decimal(10, 2)
+  isVisible     Boolean         @default(true)
+  images        String[]
+  categoryId    String
+  category      Category        @relation(fields: [categoryId], references: [categoryId])
+  storeId       String
+  store         Store           @relation(fields: [storeId], references: [storeId])
+  deletedAt     DateTime?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  stocks        Stock[]
+  movements     Movement[]
+  productPrices ProductPrice[]
+  orderItems    OrderItem[]
+}
+
+model Stock {
+  stockId   String   @id @default(uuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [productId])
+  branchId  String
+  branch    Branch   @relation(fields: [branchId], references: [branchId])
+  quantity  Int
+  type      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Movement {
+  movementId String   @id @default(uuid())
+  productId  String
+  product    Product  @relation(fields: [productId], references: [productId])
+  branchId   String
+  branch    Branch   @relation(fields: [branchId], references: [branchId])
+  orderId    String?
+  order      Order?   @relation(fields: [orderId], references: [orderId])
+  type       String
+  quantity   Int
+  note       String?
+  createdAt  DateTime @default(now())
+}
+
+model ProductPrice {
+  productPriceId String    @id @default(uuid())
+  productId      String
+  product        Product   @relation(fields: [productId], references: [productId])
+  branchId      String
+  branch         Branch    @relation(fields: [branchId], references: [branchId])
+  price          Decimal   @db.Decimal(10, 2)
+  validFrom      DateTime
+  validTo        DateTime?
+  createdAt      DateTime  @default(now())
+}
+
+model User {
+  userId    String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  image     String?
+  roleId    String
+  role      Role     @relation(fields: [roleId], references: [roleId])
+  storeId   String
+  store     Store    @relation(fields: [storeId], references: [storeId])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  orders    Order[]
+}
+
+model Role {
+  roleId          String           @id @default(uuid())
+  name            String
+  description     String
+  createdAt       DateTime         @default(now())
+  users           User[]
+  rolePermissions RolePermission[]
+}
+
+model Permission {
+  permissionId    String           @id @default(uuid())
+  action          String           @unique
+  description     String
+  createdAt       DateTime         @default(now())
+  rolePermissions RolePermission[]
+}
+
+model RolePermission {
+  roleId       String
+  role         Role       @relation(fields: [roleId], references: [roleId])
+  permissionId String
+  permission   Permission @relation(fields: [permissionId], references: [permissionId])
+
+  @@id([roleId, permissionId])
+}
+
+model Order {
+  orderId         String      @id @default(uuid())
+  userId          String
+  user            User        @relation(fields: [userId], references: [userId])
+  branchId        String
+  branch          Branch      @relation(fields: [branchId], references: [branchId])
+  status          String
+  totalAmount     Decimal     @db.Decimal(10, 2)
+  shippingAddress String
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  orderItems      OrderItem[]
+  movements       Movement[]
+}
+
+model OrderItem {
+  orderItemId     String   @id @default(uuid())
+  orderId         String
+  order           Order    @relation(fields: [orderId], references: [orderId])
+  productId       String
+  product         Product  @relation(fields: [productId], references: [productId])
+  quantity        Int
+  priceAtPurchase Decimal  @db.Decimal(10, 2)
+}
